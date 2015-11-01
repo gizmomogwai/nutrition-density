@@ -1,0 +1,4 @@
+options = { "format" => "plaintext" }
+client = WolframAlpha::Client.new "QU9VX5-XAW785TJ57", options
+response = client.query "nutrition of kale"
+puts response

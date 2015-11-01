@@ -1,0 +1,64 @@
+<html>
+  <head>
+    <link
+       rel="stylesheet"
+       type="text/css"
+       href="http://cdn.datatables.net/1.10.9/css/jquery.dataTables.css"></link>
+    <link
+       rel="stylesheet"
+       type="text/css"
+       href="https://cdn.datatables.net/buttons/1.0.3/css/buttons.dataTables.min.css"></link>
+    <script
+       type="text/javascript"
+       language="javascript"
+       src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script
+       type="text/javascript"
+       language="javascript"
+       src="http://cdn.datatables.net/1.10.9/js/jquery.dataTables.min.js"></script>
+    <script
+       type="text/javascript"
+       language="javascript"
+       src="https://cdn.datatables.net/buttons/1.0.3/js/dataTables.buttons.min.js"></script>
+    <script
+       type="text/javascript"
+       language="javascript"
+       src="https://cdn.datatables.net/buttons/1.0.3/js/buttons.colVis.min.js"></script>
+    <script
+       type="text/javascript"
+       class="init">
+      $(document).ready(function() {$('#nutrition-table').DataTable(
+      {dom: 'Bfrtip',
+      scrollY: "80%",
+      paging: false,
+      buttons: ['colvis']});} );
+    </script>
+    <title>Nutrition Density</title>
+  </head>
+  <body>
+    <table
+       id="nutrition-table"
+       width="100%">
+      <thead>
+        <tr>
+          <td>name</td>
+          <td>cal</td>
+          <td>vitc</td>
+          <td>vitc/cal</td>
+        </tr>
+      </thead>
+      <tbody>
+        <% for food in foods %>
+        <% cal = data.cal(food) %>
+        <% vitc = data.vitamin_c(food) %>
+        <% vitc_cal = vitc ? vitc / cal : '???' %>
+        <tr>
+          <td><%= food %></td>
+          <td><%= cal %></td>
+          <td><%= vitc %></td>
+          <td><%= vitc_cal %></td>
+        </tr>
+      <% end %>
+    </table>
+  </body>
+</html>

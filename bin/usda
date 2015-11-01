@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "nutrition/density"
+require 'ruby-progressbar'
+require 'yaml'
+require 'terminal-table'
+require 'erb'
+require 'benchmark'
+
+def marshal_filename
+  'data.marshal'
+end
+
+def load_data
+  start_time = Time.now
+  if File.exist?(marshal_filename)
+    data = Marshal.load(File.read(marshal_filename))
+  else
+    data = Nutrition::Density::Usda::load()
+    File.open(marshal_filename, "w") do |io|
+      Marshal.dump(data, io)
+    end
+  end
+  end_time = Time.now
+  puts end_time - start_time
+  data
+end
+
+#puts "loaded #{data.foods.size} foods and #{data.nutritions.size} nutritions"
+#File.write('data.yaml', data.to_yaml)
+#table = Terminal::Table.new(:headings => ['name', 'cal', 'vitc', 'vitc/cal'])
+template_dir = File.join(File.dirname(__FILE__), '..', 'lib', 'nutrition', 'density')
+table = ERB.new(File.read(File.join(template_dir, 'table.html.erb')))
+tr = ERB.new(File.read(File.join(template_dir, 'tr.html.erb')))
+
+def foods
+  [
+    'Kale, raw',
+    'Kale, cooked, boiled, drained, without salt',
+    'Collards, raw',
+    'Mustard greens, raw',
+    'Watercress, raw',
+    'Chard, swiss, raw',
+    'Cabbage, chinese (pak-choi), raw',
+    'Oranges, raw, all commercial varieties',
+    'Orange juice, raw',
+    'Lemons, raw, without peel',
+    'Mollusks, mussel, blue, raw',
+    'Oil, olive, salad or cooking',
+    'Arugula, raw',
+    'Onions, raw',
+    'Spinach, raw',
+    'Spinach, cooked, boiled, drained, without salt',
+    'Tofu, raw, firm, prepared with calcium sulfate',
+    'Beef, tenderloin, steak, separable lean and fat, trimmed to 1/8" fat, all grades, raw',
+    'Blueberries, raw',
+    'Blueberries, wild, frozen',
+    'Blueberries, frozen, unsweetened',
+    'SILK Blueberry soy yogurt',
+    'Stinging Nettles, blanched (Northern Plains Indians)'
+  ]
+end
+
+#  .each do |food_name|
+#    
+#    begin
+# #     cal = data.cal(food_name)
+# #     vitc = data.vitamin_c(food_name)
+# #     vitc_cal = vitc ? vitc / cal : '???'
+# #     table << [food_name, cal, vitc ? vitc : '???', vitc_cal]
+#    rescue => e
+#      puts "problem with #{food_name}"
+#      puts e
+#    end
+#  end
+#end
+b = binding
+b.local_variable_set(:data, load_data())
+b.local_variable_set(:foods, foods());
+File.write('out.html', table.result(b))

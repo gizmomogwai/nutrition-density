@@ -3,9 +3,10 @@ require "rspec/core/rake_task"
 
 RSpec::Core::RakeTask.new(:spec)
 
-task :default => :spec, :run
-
+desc 'run the generator'
 task :run do
   sh "bundle exec bin/usda"
-  sh "open out.html"
+  sh "open out/index.html"
 end
+
+task :default => [:spec, :run]

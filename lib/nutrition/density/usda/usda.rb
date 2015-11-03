@@ -35,7 +35,7 @@ module Nutrition
         end
 
         def cal
-          k, v = @nutritions.find{|k,v|k.name == 'ENERC_KCAL'}
+          _, v = find_by_name(@nutritions, 'nutrition', 'ENERC_KCAL')
           return Float(v.amount)
         end
 
@@ -102,17 +102,18 @@ module Nutrition
         end
 
         def food_by_name(name)
-          k, v = @foods.find{|k,v|v.name == name}
-          raise "food '#{name}' not found" unless v
-          return v
+          return find_by_name(@foods, 'food', name)
         end
 
         def nutrition_by_name(name)
-          k, v = @nutritions.find{|k,v|v.name == name}
-          raise "nutrition '#{name}' not found" unless v
-          return v
+          return find_by_name(@nutritions, 'nutrition' name)
         end
 
+        def find_by_name(what, msg, name)
+          _, v = what.find{|_,v|v.name == name}
+          raise "#{msg} '#{name}' not found" unless v
+          return v
+        end
       end
     end
   end

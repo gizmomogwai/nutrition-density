@@ -19,7 +19,7 @@ module Nutrition
           @columns = line.split("^")
         end
         def [](i)
-          return @columns[i].delete('~')
+          return @columns[i].gsub(/^~/).gsub(/~$/)
         end
         def to_s
           @columns.join(', ')

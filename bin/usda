@@ -2,14 +2,11 @@
 
 require "bundler/setup"
 require "nutrition/density"
-require 'ruby-progressbar'
 require 'yaml'
-require 'terminal-table'
 require 'erb'
-require 'benchmark'
 
 def marshal_filename
-  'data.marshal'
+  'out/data.marshal'
 end
 
 def load_data
@@ -27,14 +24,10 @@ def load_data
   data
 end
 
-#puts "loaded #{data.foods.size} foods and #{data.nutritions.size} nutritions"
-#File.write('data.yaml', data.to_yaml)
-#table = Terminal::Table.new(:headings => ['name', 'cal', 'vitc', 'vitc/cal'])
 template_dir = File.join(File.dirname(__FILE__), '..', 'lib', 'nutrition', 'density')
 table = ERB.new(File.read(File.join(template_dir, 'table.html.erb')))
-tr = ERB.new(File.read(File.join(template_dir, 'tr.html.erb')))
 
-def foods
+def foods(data)
   [
     'Kale, raw',
     'Kale, cooked, boiled, drained, without salt',
@@ -59,23 +52,23 @@ def foods
     'Blueberries, frozen, unsweetened',
     'SILK Blueberry soy yogurt',
     'Stinging Nettles, blanched (Northern Plains Indians)'
+  ].map do |name|
+    data.food_by_name(name)
+  end
+end
+
+def nutritions(data)
+  [
+    data.nutrition_by_name('FAT').set_ui_name('Fat'),
+    data.nutrition_by_name('VITC').set_ui_name('Vitamin C'),
+    data.nutrition_by_name('MG').set_ui_name('Magnesium'),
+    data.nutrition_by_name('FE').set_ui_name('Iron'),
+    data.nutrition_by_name('SUGAR').set_ui_name('Sugar')
   ]
 end
 
-#  .each do |food_name|
-#    
-#    begin
-# #     cal = data.cal(food_name)
-# #     vitc = data.vitamin_c(food_name)
-# #     vitc_cal = vitc ? vitc / cal : '???'
-# #     table << [food_name, cal, vitc ? vitc : '???', vitc_cal]
-#    rescue => e
-#      puts "problem with #{food_name}"
-#      puts e
-#    end
-#  end
-#end
 b = binding
-b.local_variable_set(:data, load_data())
-b.local_variable_set(:foods, foods());
-File.write('out.html', table.result(b))
+data = load_data()
+b.local_variable_set(:nutritions, nutritions(data));
+b.local_variable_set(:foods, foods(data));
+File.write('out/out.html', table.result(b))

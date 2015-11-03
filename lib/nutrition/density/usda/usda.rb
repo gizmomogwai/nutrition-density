@@ -13,6 +13,7 @@ module Nutrition
           path_to_resource('sr27asc/NUT_DATA.txt')
         )
       end
+
       class Line
         def initialize(line)
           @columns = line.split("^")
@@ -33,8 +34,13 @@ module Nutrition
           @nutritions = {}
         end
 
-        def []=(nutrition, amount)
-          @nutritions[nutrition] = amount
+        def cal
+          k, v = @nutritions.find{|k,v|k.name == 'ENERC_KCAL'}
+          return Float(v.amount)
+        end
+
+        def []=(nutrition, detail)
+          @nutritions[nutrition] = detail
         end
 
         def [](nutrition)
@@ -43,12 +49,16 @@ module Nutrition
       end
 
       class Nutrition
-        attr_reader :id, :unit, :name, :description
+        attr_reader :id, :unit, :name, :description, :ui_name
         def initialize(line)
           @id = line[0]
           @unit = line[1]
           @name = line[2]
           @description = line[3]
+        end
+        def set_ui_name(name)
+          @ui_name = name
+          return self
         end
         def to_s
           "#{description} (#{@unit})"
@@ -61,6 +71,12 @@ module Nutrition
           @food = line[0]
           @nutrition = nutritions[line[1]]
           @amount = line[2]
+        end
+        def amount_for_ui
+          return Float(@amount).round(3)
+        end
+        def amount_per_cal_for_ui(cal)
+          return (Float(@amount) / cal).round(3)
         end
         def to_s
           "#{@nutrition}: #{@amount}"
@@ -100,27 +116,6 @@ module Nutrition
           return v
         end
 
-        def nutrition_for_food_by_names(food_name, nutrition_name)
-          food = food_by_name(food_name)
-          nutrition = nutrition_by_name(nutrition_name)
-          return food[nutrition]
-        end
-
-        def vitamin_c(name)
-          food = food_by_name(name)
-          nutrition = nutrition_by_name('VITC')
-          res = food[nutrition]
-          return nil unless res
-          return Float(res.amount)
-        end
-
-        def cal(name)
-          food = food_by_name(name)
-          nutrition = nutrition_by_name('ENERC_KCAL')
-          res = food[nutrition]
-          return nil unless res
-          return Float(res.amount)
-        end
       end
     end
   end

@@ -43,22 +43,29 @@
         <tr>
           <td>name</td>
           <td>cal</td>
-          <td>vitc</td>
-          <td>vitc/cal</td>
+          <% for nutrition in nutritions %>
+            <td><%= nutrition.ui_name %> in <%= nutrition.unit %></td>
+            <td><%= nutrition.ui_name %> in <%= nutrition.unit %>/cal</td>
+          <% end %>
         </tr>
       </thead>
+
       <tbody>
         <% for food in foods %>
-        <% cal = data.cal(food) %>
-        <% vitc = data.vitamin_c(food) %>
-        <% vitc_cal = vitc ? vitc / cal : '???' %>
         <tr>
-          <td><%= food %></td>
-          <td><%= cal %></td>
-          <td><%= vitc %></td>
-          <td><%= vitc_cal %></td>
+          <td><%= food.name %></td>
+          <td><%= food.cal %></td>
+          <% for nutrition in nutritions %>
+          <% nutrition_details = food[nutrition] %>
+          <% nutrition_amount = nutrition_details ? nutrition_details.amount_for_ui : '???' %>
+          <% nutrition_per_cal = nutrition_details ? nutrition_details.amount_per_cal_for_ui(food.cal) : '???' %>
+          <td><%= nutrition_amount %></td>
+          <td><%= nutrition_per_cal %></td>
+          <% end %>
         </tr>
-      <% end %>
+        <% end %>
+      </tbody>
+
     </table>
   </body>
 </html>

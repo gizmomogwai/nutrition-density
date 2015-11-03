@@ -2,24 +2,11 @@ PATH
   remote: .
   specs:
     nutrition-density (0.1.0)
-      pry
-      ruby-progressbar
-      terminal-table
-      wolfram
 
 GEM
   remote: https://rubygems.org/
   specs:
-    coderay (1.1.0)
     diff-lcs (1.2.5)
-    method_source (0.8.2)
-    mini_portile (0.6.2)
-    nokogiri (1.6.6.2)
-      mini_portile (~> 0.6.0)
-    pry (0.10.3)
-      coderay (~> 1.1.0)
-      method_source (~> 0.8.1)
-      slop (~> 3.4)
     rake (10.4.2)
     rspec (3.3.0)
       rspec-core (~> 3.3.0)
@@ -34,11 +21,6 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.3.0)
     rspec-support (3.3.0)
-    ruby-progressbar (1.7.5)
-    slop (3.6.0)
-    terminal-table (1.5.2)
-    wolfram (0.2.1)
-      nokogiri (>= 1.4.3)
 
 PLATFORMS
   ruby

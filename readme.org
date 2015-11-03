@@ -1,3 +1,5 @@
 # nutrition-density
 [[https://gemnasium.com/gizmomogwai/nutrition-density][https://gemnasium.com/gizmomogwai/nutrition-density.png]]
+[[https://codeclimate.com/github/gizmomogwai/nutrition-density][https://codeclimate.com/github/gizmomogwai/nutrition-density.png]]
+
 

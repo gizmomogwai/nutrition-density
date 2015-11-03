@@ -106,7 +106,7 @@ module Nutrition
         end
 
         def nutrition_by_name(name)
-          return find_by_name(@nutritions, 'nutrition' name)
+          return find_by_name(@nutritions, 'nutrition', name)
         end
 
         def find_by_name(what, msg, name)

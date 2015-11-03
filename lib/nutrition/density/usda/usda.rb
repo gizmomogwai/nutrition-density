@@ -67,10 +67,11 @@ module Nutrition
 
       class NutritionDetail
         attr_reader :food, :nutrition, :amount
-        def initialize(line, nutritions)
-          @food = line[0]
+        def initialize(line, nutritions, foods)
+          @food = foods[line[0]]
           @nutrition = nutritions[line[1]]
           @amount = line[2]
+          food[@nutrition] = self
         end
         def amount_for_ui
           return Float(@amount).round(3)
@@ -83,25 +84,21 @@ module Nutrition
         end
       end
 
+      def each_iso_8859_line_to_hash(file)
+        res = Hash.new
+        File.open(file, 'rb', :encoding => 'iso-8859-1').each_line() do |line|
+          o = yield(Line.new(line))
+          res[o.id] = o
+        end
+        return res
+      end
+
       class Data
         attr_reader :foods, :nutritions
         def initialize(food_description, nutrition_description, nutrition_data)
-          @foods = {}
-          File.open(food_description, 'rb', :encoding => 'iso-8859-1').each_line() do |line|
-            food = Food.new(Line.new(line))
-            @foods[food.id] = food
-          end
-
-          @nutritions = {}
-          File.open(nutrition_description, 'rb', :encoding => 'iso-8859-1').each_line() do |line|
-            nutrition = Nutrition.new(Line.new(line))
-            @nutritions[nutrition.id] = nutrition
-          end
-
-          File.open(nutrition_data, 'rb', :encoding => 'iso-8859-1').each_line() do |line|
-            detail = NutritionDetail.new(Line.new(line), @nutritions)
-            @foods[detail.food][detail.nutrition] = detail
-          end
+          @foods = each_iso_8859_line_to_hash(food_description) {|line|Food.new(Line.new(line))}
+          @nutritions = each_iso_8859_line_to_hash(nutrition_description) {|line|Nutrition.new(line)}
+          each_iso_8859_line_to_hash(nutrition_data) {|line|NutritionDetail.new(line, @nutritions, @foods)}
         end
 
         def food_by_name(name)

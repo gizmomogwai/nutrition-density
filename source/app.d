@@ -103,22 +103,53 @@ void main() {
   writeln(nutritions);
   writeln("time for reading nutritions: ", sw.peek().msecs, "ms");
   sw.start();
-  auto i = 0;
   foreach (line; latin1Lines("NUT_DATA.txt")) {
     new NutritionDetail(line, foods, nutritions);
-    i++;
   }
   sw.stop();
   writeln("time for reading nutrition details: ", sw.peek().msecs, "ms");
 
-  Food food_by_name(string name) {
-    return find!("a.name == b")(foods.values, name)[0];
+  T byName(T)(T[string] from, string name) {
+    return find!("a.name == b")(from.values, name)[0];
   }
+
+  Food food_by_name(string name) {
+    return byName(foods, name);
+  }
+
   Nutrition nutrition_by_name(string name) {
-    return find!("a.name == b")(nutritions.values, name)[0];
+    return byName(nutritions, name);
+  }
+
+  auto interestingFoods = [
+                           "Kale, raw",
+                           "Kale, cooked, boiled, drained, without salt",
+                           "Collards, raw",
+                           "Mustard greens, raw",
+                           "Watercress, raw",
+                           "Chard, swiss, raw",
+                           "Cabbage, chinese (pak-choi), raw",
+                           "Oranges, raw, all commercial varieties",
+                           "Orange juice, raw",
+                           "Lemons, raw, without peel",
+                           "Mollusks, mussel, blue, raw",
+                           "Oil, olive, salad or cooking",
+                           "Arugula, raw",
+                           "Onions, raw",
+                           "Spinach, raw",
+                           "Spinach, cooked, boiled, drained, without salt",
+                           "Tofu, raw, firm, prepared with calcium sulfate",
+                           "Beef, tenderloin, steak, separable lean and fat, trimmed to 1/8\" fat, all grades, raw",
+                           "Blueberries, raw",
+                           "Blueberries, wild, frozen",
+                           "Blueberries, frozen, unsweetened",
+                           "SILK Blueberry soy yogurt",
+                           "Stinging Nettles, blanched (Northern Plains Indians)"
+                           ].map!(a => food_by_name(a));
+  foreach (food; interestingFoods) {
+    writeln(food);
   }
   auto f = food_by_name("Kale, raw");
   auto n = nutrition_by_name("VITC");
   writeln(f, n, f[n]);
-  
 }

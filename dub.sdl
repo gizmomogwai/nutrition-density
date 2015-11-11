@@ -1,0 +1,4 @@
+name "nutrition-density"
+description "Small D library to parse the usda nutrition database."
+copyright "Copyright © 2015, gizmo"
+authors "gizmo"

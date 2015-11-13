@@ -15,12 +15,12 @@ string t(T)(T input) {
 
 class Line {
   string[] columns;
+  auto beginTilde = regex("^~");
+  auto endTilde = regex("~$");
   this(string line) {
     columns = line.split("^");
   }
   string opIndex(size_t i) {
-    auto beginTilde = regex("^~");
-    auto endTilde = regex("~$");
     return columns[i].replaceFirst(beginTilde, "").replaceFirst(endTilde, "");
   }
 }

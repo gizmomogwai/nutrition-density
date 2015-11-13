@@ -11,14 +11,14 @@ end
 
 def load_data
   start_time = Time.now
-  if File.exist?(marshal_filename)
-    data = Marshal.load(File.read(marshal_filename))
-  else
+#  if File.exist?(marshal_filename)
+ #   data = Marshal.load(File.read(marshal_filename))
+ # else
     data = Nutrition::Density::Usda::load()
-    File.open(marshal_filename, "w") do |io|
-      Marshal.dump(data, io)
-    end
-  end
+   # File.open(marshal_filename, "w") do |io|
+   #   Marshal.dump(data, io)
+   # end
+  #end
   end_time = Time.now
   puts end_time - start_time
   data

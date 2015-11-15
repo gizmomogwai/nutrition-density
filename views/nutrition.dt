@@ -23,7 +23,7 @@ html
           paging: false,
           buttons: ['colvis']
         });
-        $('button.toggle-vis').on('click', function (e) {
+        $('.toggle-vis').on('click', function (e) {
           var columnIndices = $(this).attr('data-column').split(",");
           $.each(columnIndices, function(index, value) {
             var column = table.column(value);
@@ -38,23 +38,27 @@ html
         button(type="button", class="btn btn-default toggle-vis", data-column="1") Calories
       - foreach (i, nutrition; nutritions)
         - auto idx = (i+1)*2;
-          div(class="btn-group btn-group-xs")
-            button(type="button", class="btn btn-default toggle-vis", data-column="#{idx}") #{nutrition.uiName}
-            button(type="button", class="btn btn-default toggle-vis", data-column="#{idx},#{idx+1}") *
-            button(type="button", class="btn btn-default toggle-vis", data-column="#{idx+1}") /cal
+        div(class="btn-group btn-group-xs")
+          button(type="button", class="btn btn-default toggle-vis", data-column="#{idx},#{idx+1}") #{nutrition.uiName}
+          button(type="button", class="btn btn-default dropdown-toggle", data-toggle="dropdown")
+            span(class="caret")
+          ul(class="dropdown-menu")
+            li
+              a(href="#", class="toggle-vis", data-column="#{idx}") value
+              a(href="#", class="toggle-vis", data-column="#{idx+1}") value/cal
     table(id='nutrition-table', width='100%')
       thead
         tr
           td name
           td cal
           - foreach (nutrition; nutritions)
-            td= nutrition.name
-            td #{nutrition.name}/cal
+            td= nutrition.uiName
+            td #{nutrition.uiName}/cal
       tbody
         - foreach (food; foods)
           tr
             td= food.name
-            - auto cal = food.cal();
+            - auto cal = food.cal;
             - auto calories = cal ? cal.amount : "???";
             td= calories
             - foreach (nutrition; nutritions)

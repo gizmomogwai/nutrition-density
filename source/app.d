@@ -71,7 +71,7 @@ class NutritionDetail {
     return format("Nutrition '%s' in Food '%s': %s", nutrition.name, food.name, amount);
   }
   string amountForUi() {
-    return to!string(to!float(amount).round());
+    return format("%.2f", to!float(amount));
   }
   string amountPerCalForUi(NutritionDetail calories) {
     if (calories is null) {
@@ -86,6 +86,7 @@ class Food {
   int id;
   string name;
   NutritionDetail[Nutrition] nutritions;
+  public NutritionDetail cal;
   this(Line l) {
     id = to!int(l[0]);
     name = l[2];
@@ -95,35 +96,13 @@ class Food {
   }
   void opIndexAssign(NutritionDetail detail, Nutrition nutrition) {
     nutritions[nutrition] = detail;
-  }
-  private NutritionDetail byName(string name) {
-    /+
-     foreach (nutritionDetail; nutritions) {
-     if (nutritionDetail.nutrition.name == name) {
-     return nutritionDetail;
-     }
-     }
-     +/
-    /+
-     auto res = find!("a.nutrition.name == b")(nutritions.values, name);
-     if (res.empty) {
-     return null;
-     } else {
-     return res[0];
-     }
-     +/
-    auto res = find!((a, b) => a.nutrition.name == b)(nutritions.values, name);
-    if (res.empty) {
-      return null;
-    } else {
-      return res[0];
+    if (nutrition.name == "ENERC_KCAL") {
+      cal = detail;
     }
   }
+
   NutritionDetail opIndex(Nutrition nutrition) {
     return nutritions[nutrition];
-  }
-  NutritionDetail cal() {
-    return byName("ENERC_KCAL");
   }
 }
 
@@ -219,18 +198,13 @@ void main() {
                 // "SILK Blueberry soy yogurt",
                 // "Stinging Nettles, blanched (Northern Plains Indians)"
                 ].map!(a => data.foodByName(a));
-  /+
-   foreach (food; foods) {
-   writeln(food);
-   }
-   +/
 
   auto nutritions =
     [
      data.nutritionByName("FAT").setUiName("Fat"),
-     data.nutritionByName("VITC").setUiName("Vitamin C"),
-     data.nutritionByName("MG").setUiName("Magnesium"),
-     data.nutritionByName("FE").setUiName("Iron"),
+     data.nutritionByName("VITC").setUiName("VitC"),
+     data.nutritionByName("MG").setUiName("MG"),
+     data.nutritionByName("FE").setUiName("FE"),
      data.nutritionByName("SUGAR").setUiName("Sugar"),
      ];
   OutputStream output = openFile("out/d.html", FileMode.createTrunc);

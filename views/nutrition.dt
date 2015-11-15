@@ -1,0 +1,65 @@
+- void css(string file)
+  link(rel='stylesheet', type='text/css', href='#{file}.css')
+- void js(string file)
+  script(type='text/javascript', language='javascript', src='#{file}.js')
+doctype html
+html
+  head
+    - css("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min");
+    - css("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min");
+    - css("http://cdn.datatables.net/1.10.9/css/jquery.dataTables");
+    - css("https://cdn.datatables.net/buttons/1.0.3/css/buttons.dataTables.min");
+    - js("http://code.jquery.com/jquery-1.11.3.min");
+    - js("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min");
+    - js("http://cdn.datatables.net/1.10.9/js/jquery.dataTables.min");
+    - js("https://cdn.datatables.net/1.10.10/js/dataTables.bootstrap.min");
+    - js("https://cdn.datatables.net/buttons/1.0.3/js/dataTables.buttons.min");
+    - js("https://cdn.datatables.net/buttons/1.0.3/js/buttons.colVis.min");
+    script(type='text/javascript', class='init').
+      $(document).ready(function() {
+        var table = $('#nutrition-table').DataTable({
+          dom: 'frtip',
+          scrollY: '80%',
+          paging: false,
+          buttons: ['colvis']
+        });
+        $('button.toggle-vis').on('click', function (e) {
+          var columnIndices = $(this).attr('data-column').split(",");
+          $.each(columnIndices, function(index, value) {
+            var column = table.column(value);
+            column.visible( ! column.visible() );
+          });
+        });
+      });
+    title Nutrition Density
+  body
+    div(class="btn-toolbar")
+      div(class="btn-group btn-group-xs")
+        button(type="button", class="btn btn-default toggle-vis", data-column="1") Calories
+      - foreach (i, nutrition; nutritions)
+        - auto idx = (i+1)*2;
+          div(class="btn-group btn-group-xs")
+            button(type="button", class="btn btn-default toggle-vis", data-column="#{idx}") #{nutrition.uiName}
+            button(type="button", class="btn btn-default toggle-vis", data-column="#{idx},#{idx+1}") *
+            button(type="button", class="btn btn-default toggle-vis", data-column="#{idx+1}") /cal
+    table(id='nutrition-table', width='100%')
+      thead
+        tr
+          td name
+          td cal
+          - foreach (nutrition; nutritions)
+            td= nutrition.name
+            td #{nutrition.name}/cal
+      tbody
+        - foreach (food; foods)
+          tr
+            td= food.name
+            - auto cal = food.cal();
+            - auto calories = cal ? cal.amount : "???";
+            td= calories
+            - foreach (nutrition; nutritions)
+              - auto nutritionDetails = food[nutrition];
+              - auto nutritionAmount = nutritionDetails ? nutritionDetails.amountForUi() : "???";
+              - auto nutritionPerCal = nutritionDetails ? nutritionDetails.amountPerCalForUi(cal) : "???";
+              td= nutritionAmount
+              td= nutritionPerCal

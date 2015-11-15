@@ -1,11 +1,16 @@
+import std.algorithm;
+import std.array;
+import std.conv;
+import std.datetime;
+import std.encoding;
+import std.file;
+import std.math;
+import std.regex;
 import std.stdio;
 import std.string;
-import std.file;
-import std.encoding;
-import std.datetime;
-import std.regex;
-import std.algorithm;
-import std.conv;
+import vibe.core.file;
+import vibe.core.stream;
+import vibe.templ.diet;
 
 string t(T)(T input) {
   string output;
@@ -15,64 +20,110 @@ string t(T)(T input) {
 
 class Line {
   string[] columns;
-  auto beginTilde = regex("^~");
-  auto endTilde = regex("~$");
+  static beginTilde = regex("^~");
+  static endTilde = regex("~$");
   this(string line) {
-    columns = line.split("^");
+    columns = array(line.split("^").map!(a => a.replaceFirst(beginTilde, "").replaceFirst(endTilde, "")));
   }
   string opIndex(size_t i) {
-    return columns[i].replaceFirst(beginTilde, "").replaceFirst(endTilde, "");
+    return columns[i];
+  }
+  override string toString() {
+    return "Line(" ~ to!string(columns) ~ ")";
   }
 }
 
 class Nutrition {
-  string id;
+  int id;
   string unit;
   string name;
+  public string uiName;
   string description;
   this(Line line) {
-    id = line[0];
+    id = to!int(line[0]);
     unit = line[1];
     name = line[2];
     description = line[3];
   }
   override string toString() {
-    return format("Nutrition { id: %s, unit: %s, name: %s, description: %s }", id, unit, name, description);
+    return format("Nutrition { id: %d, unit: %s, name: %s, description: %s }", id, unit, name, description);
+  }
+
+  Nutrition setUiName(string uiName) {
+    this.uiName = uiName;
+    return this;
   }
 }
 
 class NutritionDetail {
   Food food;
   Nutrition nutrition;
-  string amount;
-  string id;
-  this(Line line, Food[string] foods, Nutrition[string] nutritions) {
-    food = foods[line[0]];
-    nutrition = nutritions[line[1]];
+  public string amount;
+  this(Line line, Food[int] foods, Nutrition[int] nutritions) {
+    auto foodId = to!int(line[0]);
+    food = foods[foodId];
+    auto nutritionId = to!int(line[1]);
+    nutrition = nutritions[nutritionId];
     amount = line[2];
     food[nutrition] = this;
   }
   override string toString() {
     return format("Nutrition '%s' in Food '%s': %s", nutrition.name, food.name, amount);
   }
+  string amountForUi() {
+    return to!string(to!float(amount).round());
+  }
+  string amountPerCalForUi(NutritionDetail calories) {
+    if (calories is null) {
+      return "???";
+    } else {
+      return format("%.2f", to!float(amount) / to!float(calories.amount));
+    }
+  }
 }
 
 class Food {
-  string id;
+  int id;
   string name;
   NutritionDetail[Nutrition] nutritions;
   this(Line l) {
-    id = l[0];
+    id = to!int(l[0]);
     name = l[2];
   }
   override string toString() {
-    return format("Food { id: %s, name: %s }", id, name);
+    return format("Food { id: %d, name: %s }", id, name);
   }
   void opIndexAssign(NutritionDetail detail, Nutrition nutrition) {
     nutritions[nutrition] = detail;
   }
+  private NutritionDetail byName(string name) {
+    /+
+     foreach (nutritionDetail; nutritions) {
+     if (nutritionDetail.nutrition.name == name) {
+     return nutritionDetail;
+     }
+     }
+     +/
+    /+
+     auto res = find!("a.nutrition.name == b")(nutritions.values, name);
+     if (res.empty) {
+     return null;
+     } else {
+     return res[0];
+     }
+     +/
+    auto res = find!((a, b) => a.nutrition.name == b)(nutritions.values, name);
+    if (res.empty) {
+      return null;
+    } else {
+      return res[0];
+    }
+  }
   NutritionDetail opIndex(Nutrition nutrition) {
     return nutritions[nutrition];
+  }
+  NutritionDetail cal() {
+    return byName("ENERC_KCAL");
   }
 }
 
@@ -81,8 +132,8 @@ auto latin1Lines(string fileName) {
   return t(file).splitLines().map!(a => new Line(a));
 }
 
-T[string] latin1Lines2Hash(T)(string fileName) {
-  T[string] result;
+T[int] latin1Lines2Hash(T)(string fileName) {
+  T[int] result;
   foreach (line; latin1Lines(fileName)) {
     T t = to!T(line);
     result[t.id] = t;
@@ -90,66 +141,98 @@ T[string] latin1Lines2Hash(T)(string fileName) {
   return result;
 }
 
-void main() {
-  StopWatch sw;
-  sw.start();
-  alias toFood = to!Food;
-  auto foods = latin1Lines2Hash!(Food)("FOOD_DES.txt");
-  sw.stop();
-  writeln("time for reading food: ", sw.peek().msecs, "ms");
-  sw.start();
-  auto nutritions = latin1Lines2Hash!(Nutrition)("NUTR_DEF.txt");
-  sw.stop();
-  writeln(nutritions);
-  writeln("time for reading nutritions: ", sw.peek().msecs, "ms");
-  sw.start();
-  foreach (line; latin1Lines("NUT_DATA.txt")) {
-    new NutritionDetail(line, foods, nutritions);
-  }
-  sw.stop();
-  writeln("time for reading nutrition details: ", sw.peek().msecs, "ms");
+class Data {
+  Food[int] foods;
+  Nutrition[int] nutritions;
 
-  T byName(T)(T[string] from, string name) {
-    return find!("a.name == b")(from.values, name)[0];
+  this() {
+    readFoods();
+    readNutritions();
+    readNutritionDetails();
   }
 
-  Food food_by_name(string name) {
+  private void readFoods() {
+    StopWatch sw;
+    sw.start();
+    foods = latin1Lines2Hash!(Food)("FOOD_DES.txt");
+    sw.stop();
+    writeln("time for reading food: ", sw.peek().msecs, "ms");
+  }
+
+  private void readNutritions() {
+    StopWatch sw;
+    sw.start();
+    nutritions = latin1Lines2Hash!(Nutrition)("NUTR_DEF.txt");
+    sw.stop();
+    writeln("time for reading nutritions: ", sw.peek().msecs, "ms");
+  }
+
+  private void readNutritionDetails() {
+    StopWatch sw;
+    sw.start();
+    foreach (line; latin1Lines("NUT_DATA.txt")) {
+      new NutritionDetail(line, foods, nutritions);
+    }
+    sw.stop();
+    writeln("time for reading nutrition details: ", sw.peek().msecs, "ms");
+  }
+
+  private T byName(T)(T[int] from, string name) {
+    return find!((a, b) => a.name == b)(from.values, name)[0];
+  }
+
+  public Food foodByName(string name) {
     return byName(foods, name);
   }
 
-  Nutrition nutrition_by_name(string name) {
+  public Nutrition nutritionByName(string name) {
     return byName(nutritions, name);
   }
 
-  auto interestingFoods = [
-                           "Kale, raw",
-                           "Kale, cooked, boiled, drained, without salt",
-                           "Collards, raw",
-                           "Mustard greens, raw",
-                           "Watercress, raw",
-                           "Chard, swiss, raw",
-                           "Cabbage, chinese (pak-choi), raw",
-                           "Oranges, raw, all commercial varieties",
-                           "Orange juice, raw",
-                           "Lemons, raw, without peel",
-                           "Mollusks, mussel, blue, raw",
-                           "Oil, olive, salad or cooking",
-                           "Arugula, raw",
-                           "Onions, raw",
-                           "Spinach, raw",
-                           "Spinach, cooked, boiled, drained, without salt",
-                           "Tofu, raw, firm, prepared with calcium sulfate",
-                           "Beef, tenderloin, steak, separable lean and fat, trimmed to 1/8\" fat, all grades, raw",
-                           "Blueberries, raw",
-                           "Blueberries, wild, frozen",
-                           "Blueberries, frozen, unsweetened",
-                           "SILK Blueberry soy yogurt",
-                           "Stinging Nettles, blanched (Northern Plains Indians)"
-                           ].map!(a => food_by_name(a));
-  foreach (food; interestingFoods) {
-    writeln(food);
-  }
-  auto f = food_by_name("Kale, raw");
-  auto n = nutrition_by_name("VITC");
-  writeln(f, n, f[n]);
+}
+
+void main() {
+  Data data = new Data();
+
+  auto foods = [
+                "Kale, raw",
+                "Kale, cooked, boiled, drained, without salt",
+                "Collards, raw",
+                "Mustard greens, raw",
+                "Watercress, raw",
+                "Chard, swiss, raw",
+                "Cabbage, chinese (pak-choi), raw",
+                "Oranges, raw, all commercial varieties",
+                "Orange juice, raw",
+                "Lemons, raw, without peel",
+                "Mollusks, mussel, blue, raw",
+                "Oil, olive, salad or cooking",
+                "Arugula, raw",
+                "Onions, raw",
+                "Spinach, raw",
+                "Spinach, cooked, boiled, drained, without salt",
+                // "Tofu, raw, firm, prepared with calcium sulfate",
+                "Beef, tenderloin, steak, separable lean and fat, trimmed to 1/8\" fat, all grades, raw",
+                "Blueberries, raw",
+                // "Blueberries, wild, frozen",
+                "Blueberries, frozen, unsweetened",
+                // "SILK Blueberry soy yogurt",
+                // "Stinging Nettles, blanched (Northern Plains Indians)"
+                ].map!(a => data.foodByName(a));
+  /+
+   foreach (food; foods) {
+   writeln(food);
+   }
+   +/
+
+  auto nutritions =
+    [
+     data.nutritionByName("FAT").setUiName("Fat"),
+     data.nutritionByName("VITC").setUiName("Vitamin C"),
+     data.nutritionByName("MG").setUiName("Magnesium"),
+     data.nutritionByName("FE").setUiName("Iron"),
+     data.nutritionByName("SUGAR").setUiName("Sugar"),
+     ];
+  OutputStream output = openFile("out/d.html", FileMode.createTrunc);
+  compileDietFile!("nutrition.dt", foods, nutritions)(output);
 }

@@ -4,3 +4,5 @@ __dummy.html
 *.o
 *.obj
 out
+nutrition-density
+*.lst

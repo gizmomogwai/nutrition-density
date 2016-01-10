@@ -104,6 +104,15 @@ class Food {
   NutritionDetail opIndex(Nutrition nutrition) {
     return nutritions[nutrition];
   }
+
+  bool nutritionDataAvailableFor(Nutrition n) {
+    return !((n in nutritions) is null);
+  }
+
+  double nutritionPerCal(Nutrition n) {
+    auto d = nutritions[n];
+    return to!float(d.amount) / to!float(cal.amount);
+  }
 }
 
 auto latin1Lines(string fileName) {
@@ -174,29 +183,33 @@ void main() {
   Data data = new Data();
 
   auto foods = [
-                "Kale, raw",
-                "Kale, cooked, boiled, drained, without salt",
-                "Collards, raw",
-                "Mustard greens, raw",
-                "Watercress, raw",
-                "Chard, swiss, raw",
+                "Arugula, raw",
+                "Beef, tenderloin, steak, separable lean and fat, trimmed to 1/8\" fat, all grades, raw",
+                "Blueberries, frozen, unsweetened",
+                "Blueberries, raw",
+                "Broccoli, raw",
+                "Broccoli, cooked, boiled, drained, without salt",
+                "Brussels sprouts, cooked, boiled, drained, without salt",
+                "Brussels sprouts, raw",
                 "Cabbage, chinese (pak-choi), raw",
-                "Oranges, raw, all commercial varieties",
-                "Orange juice, raw",
+                "Chard, swiss, raw",
+                "Collards, raw",
+                "Kale, cooked, boiled, drained, without salt",
+                "Kale, raw",
                 "Lemons, raw, without peel",
                 "Mollusks, mussel, blue, raw",
+                "Mustard greens, raw",
                 "Oil, olive, salad or cooking",
-                "Arugula, raw",
                 "Onions, raw",
-                "Spinach, raw",
+                "Orange juice, raw",
+                "Oranges, raw, all commercial varieties",
                 "Spinach, cooked, boiled, drained, without salt",
-                // "Tofu, raw, firm, prepared with calcium sulfate",
-                "Beef, tenderloin, steak, separable lean and fat, trimmed to 1/8\" fat, all grades, raw",
-                "Blueberries, raw",
+                "Spinach, raw",
+                "Watercress, raw",
                 // "Blueberries, wild, frozen",
-                "Blueberries, frozen, unsweetened",
                 // "SILK Blueberry soy yogurt",
-                // "Stinging Nettles, blanched (Northern Plains Indians)"
+                // "Stinging Nettles, blanched (Northern Plains Indians)",
+                // "Tofu, raw, firm, prepared with calcium sulfate",
                 ].map!(a => data.foodByName(a));
 
   auto nutritions =
@@ -206,7 +219,27 @@ void main() {
      data.nutritionByName("MG").setUiName("MG"),
      data.nutritionByName("FE").setUiName("FE"),
      data.nutritionByName("SUGAR").setUiName("Sugar"),
+     data.nutritionByName("PROCNT").setUiName("Protein"),
      ];
-  OutputStream output = openFile("out/d.html", FileMode.createTrunc);
+  foreach (nutrition; nutritions) {
+    Food res = null;
+    double maxNutrition = 0.0;
+    foreach (food; data.foods.values) {
+      if (food.nutritionDataAvailableFor(nutrition)) {
+        auto nutritionPerCal = food.nutritionPerCal(nutrition);
+        if (nutritionPerCal > maxNutrition) {
+          maxNutrition = nutritionPerCal;
+          res = food;
+        }
+      }
+    }
+    if (!(res is null)) {
+      writeln(format("max for nutrition %s is %s", nutrition, res));
+    } else {
+      writeln(format("no nutrition found for %s", nutrition));
+    }
+  }
+
+  OutputStream output = openFile("out/index.html", FileMode.createTrunc);
   compileDietFile!("nutrition.dt", foods, nutritions)(output);
 }

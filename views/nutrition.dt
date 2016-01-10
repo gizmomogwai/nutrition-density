@@ -9,6 +9,7 @@ html
     - css("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min");
     - css("http://cdn.datatables.net/1.10.9/css/jquery.dataTables");
     - css("https://cdn.datatables.net/buttons/1.0.3/css/buttons.dataTables.min");
+    - css("rotate-headers");
     - js("http://code.jquery.com/jquery-1.11.3.min");
     - js("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min");
     - js("http://cdn.datatables.net/1.10.9/js/jquery.dataTables.min");
@@ -46,14 +47,20 @@ html
             li
               a(href="#", class="toggle-vis", data-column="#{idx}") value
               a(href="#", class="toggle-vis", data-column="#{idx+1}") value/cal
-    table(id='nutrition-table', width='100%')
+    table(id='nutrition-table', width='100%', class='table table-hover table-condensed')
       thead
         tr
-          td name
-          td cal
+          th name
+          th.rotated
+            div
+              span cal
           - foreach (nutrition; nutritions)
-            td= nutrition.uiName
-            td #{nutrition.uiName}/cal
+            th.rotated
+              div
+                span= nutrition.uiName
+            th.rotated
+              div
+                span #{nutrition.uiName}/cal
       tbody
         - foreach (food; foods)
           tr

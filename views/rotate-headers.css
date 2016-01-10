@@ -1,0 +1,11 @@
+th.rotated {
+  /* Something you can count on */
+  height: 100px;
+  white-space: nowrap;
+}
+
+th.rotated > div {
+  transform:
+    rotate(-45deg);
+  width: 20px;
+}
